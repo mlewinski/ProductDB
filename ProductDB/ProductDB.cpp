@@ -14,7 +14,7 @@ unsigned long long CurrentId; // Id for new products
 
 #pragma region Structures
 	struct Product {
-		int id;
+		unsigned long long id;
 		string name;
 		float price;
 	};
@@ -37,6 +37,7 @@ unsigned long long CurrentId; // Id for new products
 #pragma region ItemControl
 	Product CreateNewProduct();
 	void EditProduct(ProductRepositoryNode*, int);
+	void DeleteProduct(ProductRepositoryNode* &repository, int);
 #pragma endregion
 
 #pragma region ProgramControl
@@ -81,11 +82,18 @@ int main()
 			case 3:
 				AddToRepository(repo, CreateNewProduct());
 				break;
-			case 4:
+			case 4: {
 				int ID;
 				cout << "Enter product's ID : ";
 				cin >> ID;
-				EditProduct(repo, ID);
+				EditProduct(repo, ID); }
+				break;
+			case 5:
+				int ID;
+				cout << "Enter product's ID : ";
+				cin >> ID;
+				DeleteProduct(repo, ID);
+				break;
 		}
 		_getch();
 		option = Menu();
@@ -205,6 +213,29 @@ void EditProduct(ProductRepositoryNode* repository, int id) {
 		}
 	}
 	cout << "Selected product does not exist" << endl;
+}
+
+void DeleteProduct(ProductRepositoryNode* &repository, int id) {
+	ProductRepositoryNode* tmp = repository;
+	if (repository->product.id == id) {
+		tmp = NULL;
+		if (repository->nextElement != NULL) {
+			tmp = repository->nextElement;
+		}
+		delete repository;
+		repository = tmp;
+		return;
+	}
+	if (repository == NULL) return;
+	if (repository != NULL) {
+		while (tmp->nextElement->product.id != id) {
+			if (tmp->nextElement == NULL) return;
+			tmp = tmp->nextElement;
+		}
+		ProductRepositoryNode* temp = tmp->nextElement;
+		tmp->nextElement = temp->nextElement;
+		delete temp;
+	}
 }
 
 int Menu() {
