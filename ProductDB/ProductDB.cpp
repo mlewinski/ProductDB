@@ -10,7 +10,7 @@
 
 using namespace std;
 
-unsigned long long id;
+unsigned long long CurrentId; // Id for new products
 
 #pragma region Structures
 	struct Product {
@@ -81,6 +81,11 @@ int main()
 			case 3:
 				AddToRepository(repo, CreateNewProduct());
 				break;
+			case 4:
+				int ID;
+				cout << "Enter product's ID : ";
+				cin >> ID;
+				EditProduct(repo, ID);
 		}
 		_getch();
 		option = Menu();
@@ -178,12 +183,14 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 Product CreateNewProduct() {
 	Product p;
 	system("cls");
-	cout << "Creating new product : " << endl;
+	cout << "Enter product information : " << endl;
 	cout << "> Product name : " << endl;
 	cin >> p.name;
 	cout << "> Product price : " << endl;
 	cin >> p.price;
-	p.id = 10;
+	cout << "Assigned ID : " << CurrentId << endl;
+	p.id = CurrentId;
+	CurrentId++;
 	return p;
 }
 
