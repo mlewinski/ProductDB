@@ -5,6 +5,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <conio.h>
+#define EPSILON 0.001
 
 using namespace std;
 
@@ -39,19 +41,50 @@ unsigned long long id;
 
 #pragma region ProgramControl
 	int Menu();
+	int FindMenu();
 #pragma endregion
 
 int main()
 {
+	//init
 	ProductRepositoryNode* repo = NULL;
-	
-	for(int i=0;i<2;i++) AddToRepository(repo, CreateNewProduct());
-	
-	//DisplayRepository(repo);
-	DisplayRepository(repo);
-	EditProduct(repo, 10);
-	DisplayRepository(repo);
-	system("pause");
+	int option = Menu();
+	while (option != 7) {
+		switch (option) {
+			case 1:
+				DisplayRepository(repo);
+				break;
+			case 2: {
+				int optionFind = FindMenu();
+				switch (optionFind) {
+					case 1:
+						int ID;
+						cout << "ID : ";
+						cin >> ID;
+						FindProduct(repo, ID);
+						break;
+					case 2:
+						double price;
+						cout << "Price : ";
+						cin >> price;
+						FindProduct(repo, price);
+						break;
+					case 3:
+						string name;
+						cout << "Name : ";
+						cin >> name;
+						FindProduct(repo, name);
+						break;
+				}
+			}
+			break;
+			case 3:
+				AddToRepository(repo, CreateNewProduct());
+				break;
+		}
+		_getch();
+		option = Menu();
+	}
 	return 0;
 }
 
@@ -68,6 +101,7 @@ void AddToRepository(ProductRepositoryNode* &repository, Product product) {
 }
 
 void DisplayRepository(ProductRepositoryNode* repository) {
+	system("cls");
 	int i = 0;
 	ProductRepositoryNode* tmp = repository;
 	if (tmp != NULL) {
@@ -79,12 +113,12 @@ void DisplayRepository(ProductRepositoryNode* repository) {
 		}
 	}
 	else {
-		cout << "No products found in database" << endl;
+		cout << "No products found in database\n\n" << endl;
 	}
 }
 
 void DisplayProductInfo(Product product) {
-	cout << "=========================================================" << endl;
+	//cout << "=========================================================" << endl;
 	cout << "> Product id : " << product.id << endl;
 	cout << "> Product name : " << product.name << endl;
 	cout << "> Product price : " << product.price << endl;
@@ -128,7 +162,7 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 	ProductRepositoryNode* tmp = repository;
 	if (tmp != NULL) {
 		while (tmp != NULL) {
-			if (tmp->product.price == price) {
+			if (fabs(tmp->product.price - price) < EPSILON) {
 				DisplayProductInfo(tmp->product);
 			}
 			tmp = tmp->nextElement;
@@ -143,6 +177,7 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 
 Product CreateNewProduct() {
 	Product p;
+	system("cls");
 	cout << "Creating new product : " << endl;
 	cout << "> Product name : " << endl;
 	cin >> p.name;
@@ -166,6 +201,7 @@ void EditProduct(ProductRepositoryNode* repository, int id) {
 }
 
 int Menu() {
+	system("cls");
 	cout << "------------------- Main menu -----" << endl;
 	cout << "====== View =======================" << endl;
 	cout << "1. Display all products in database" << endl;
@@ -175,9 +211,23 @@ int Menu() {
 	cout << "4. Edit existing product" << endl;
 	cout << "5. Delete product from database" << endl;
 	cout << "6. Sort database" << endl;
+	cout << "\n" << endl;
+	cout << "7. Exit" << endl;
 	cout << "\nSelect option : ";
 	int option;
 	cin >> option;
-	if (option < 0 || option >6) return Menu();
+	if (option < 1 || option >7) return Menu();
+	return option;
+}
+
+int FindMenu() {
+	system(" cls");
+	cout << "1. Find by ID" << endl;
+	cout << "2. Find by price" << endl;
+	cout << "3. Find by name" << endl;
+
+	int option;
+	cout << "Option : ";
+	cin >> option;
 	return option;
 }
