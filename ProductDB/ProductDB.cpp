@@ -11,6 +11,7 @@
 using namespace std;
 
 unsigned long long CurrentId; // Id for new products
+unsigned long long RepoSize;
 
 #pragma region Structures
 	struct Product {
@@ -32,6 +33,7 @@ unsigned long long CurrentId; // Id for new products
 	void FindProduct(ProductRepositoryNode*, string);
 	void FindProduct(ProductRepositoryNode*, int);
 	void FindProduct(ProductRepositoryNode*, double);
+	void SortRepository(ProductRepositoryNode* &r, int); //int - mode
 #pragma endregion
 
 #pragma region ItemControl
@@ -43,6 +45,7 @@ unsigned long long CurrentId; // Id for new products
 #pragma region ProgramControl
 	int Menu();
 	int FindMenu();
+	int SortMenu();
 #pragma endregion
 
 int main()
@@ -94,6 +97,10 @@ int main()
 				cin >> ID;
 				DeleteProduct(repo, ID);
 				break;
+			case 6:
+				int optionSort = SortMenu();
+				SortRepository(repo, optionSort);
+				break;
 		}
 		_getch();
 		option = Menu();
@@ -111,6 +118,7 @@ void AddToRepository(ProductRepositoryNode* &repository, Product product) {
 		while (tmp->nextElement != NULL) tmp = tmp->nextElement;
 		tmp->nextElement = newProduct;
 	}	
+	RepoSize++;
 }
 
 void DisplayRepository(ProductRepositoryNode* repository) {
@@ -188,6 +196,62 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 
 #pragma endregion
 
+void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1 - name, 2 - price
+	Product* table = new Product[RepoSize];
+	ProductRepositoryNode* tmp = repository;
+	ProductRepositoryNode* tmp2 = repository;
+	int iterator = 0;
+	while (tmp != NULL) {
+		table[iterator] = tmp->product;
+		tmp2 = tmp->nextElement;
+		delete tmp;
+		tmp = tmp2;
+		iterator++;
+	}
+	switch (mode) {
+	case 1: {
+			bool p = true;
+			for (int i = RepoSize - 1; i > 0; i--) {
+				for (int j = 0; j < i; j++) {
+					if (table[j].id > table[j + 1].id) swap(table[j], table[j + 1]);
+					p = false;
+				}
+				if (p) break;
+			}
+		}
+		break;
+
+	case 2: {
+			bool p = true;
+			for (int i = RepoSize - 1; i > 0; i--) {
+				for (int j = 0; j < i; j++) {
+					if (table[j].name > table[j + 1].name) swap(table[j], table[j + 1]);
+					p = false;
+				}
+				if (p) break;
+			}
+		}
+		break;
+
+	case 3: {
+			bool p = true;
+			for (int i = RepoSize - 1; i > 0; i--) {
+				for (int j = 0; j < i; j++) {
+					if (table[j].price > table[j + 1].price) swap(table[j], table[j + 1]);
+					p = false;
+				}
+				if (p) break;
+			}
+		}
+		break;
+	}
+	repository = NULL;
+	int temp = RepoSize;
+	RepoSize = 0;
+	for (int i = 0; i < temp; i++) AddToRepository(repository, table[i]);
+	return;
+}
+
 Product CreateNewProduct() {
 	Product p;
 	system("cls");
@@ -224,6 +288,7 @@ void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 		}
 		delete repository;
 		repository = tmp;
+		RepoSize--;
 		return;
 	}
 	if (repository == NULL) return;
@@ -235,6 +300,7 @@ void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 		ProductRepositoryNode* temp = tmp->nextElement;
 		tmp->nextElement = temp->nextElement;
 		delete temp;
+		RepoSize--;
 	}
 }
 
@@ -263,6 +329,18 @@ int FindMenu() {
 	cout << "1. Find by ID" << endl;
 	cout << "2. Find by price" << endl;
 	cout << "3. Find by name" << endl;
+
+	int option;
+	cout << "Option : ";
+	cin >> option;
+	return option;
+}
+
+int SortMenu() {
+	system(" cls");
+	cout << "1. Sort by ID" << endl;
+	cout << "2. Sort by price" << endl;
+	cout << "3. Sort by name" << endl;
 
 	int option;
 	cout << "Option : ";
