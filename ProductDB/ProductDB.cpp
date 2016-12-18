@@ -4,6 +4,7 @@
 #include <string>
 #include <conio.h>
 #include <limits>
+#include <fstream>
 #define EPSILON 0.001
 
 using namespace std;
@@ -29,6 +30,8 @@ loong RepoSize;
 #pragma region Functions
 	template <class T> T RequestValueFromUser(string, string);
 	template <class T> T RequestValueFromUser(string, string, T, T);
+	void SaveToFile(ProductRepositoryNode* &r);
+	void LoadFromFile(ProductRepositoryNode* &r);
 #pragma endregion
 
 #pragma region RepoControl
@@ -60,7 +63,7 @@ int main()
 	RepoSize = 0;
 	// TODO: load repository from file
 	int option = Menu();
-	while (option != 7) {
+	while (option != 8) {
 		switch (option) {
 			case 1:
 				DisplayRepository(repo);
@@ -104,9 +107,13 @@ int main()
 				cin >> ID;
 				DeleteProduct(repo, ID);
 				break;
-			case 6:
+			case 6: {
 				int optionSort = SortMenu();
 				SortRepository(repo, optionSort);
+				}
+				break;
+			case 7:
+				SaveToFile(repo);
 				break;
 		}
 		_getch();
@@ -145,6 +152,36 @@ template <class T> T RequestValueFromUser(string message, string errorMessage, T
 		break;
 	}
 	return value;
+}
+
+void SaveToFile(ProductRepositoryNode* &repository) {
+	ifstream f1("ProductDB.dbf");
+	if (f1.good()) {
+		rename("ProductDB.dbf", "ProductDB.transact.dbf");
+		f1.close();
+	}
+	try {
+		ofstream output("ProductDB.dbf", ios::trunc);
+		output << CurrentId <<" "<< RepoSize << endl;
+		ProductRepositoryNode* tmp = repository;
+		if (tmp != NULL) {
+			while (tmp != NULL) {
+				output << tmp->product.id << endl << tmp->product.name << endl << tmp->product.price << endl;
+				tmp = tmp->nextElement;
+			}
+		}
+		output.close();
+	}
+	catch (const char* msg) {
+		cout << msg << endl;
+		remove("ProductDB.dbf");
+		rename("ProductDB.transact.dbf", "ProductDB");
+	}
+	remove("ProductDB.transact.dbf");
+}
+
+void LoadFromFile(ProductRepositoryNode* &repository) {
+
 }
 
 void AddToRepository(ProductRepositoryNode* &repository, Product product) {
@@ -360,9 +397,10 @@ int Menu() {
 	cout << "4. Edit existing product" << endl;
 	cout << "5. Delete product from database" << endl;
 	cout << "6. Sort database" << endl;
+	cout << "7. Save changes" << endl;
 	cout << "\n" << endl;
-	cout << "7. Exit" << endl;
-	return RequestValueFromUser("\nSelect option : ", "Wrong option! Select value ", 1, 7);
+	cout << "8. Exit" << endl;
+	return RequestValueFromUser("\nSelect option : ", "Wrong option! Select value ", 1, 8);
 }
 
 int FindMenu() {
