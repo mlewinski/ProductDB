@@ -28,6 +28,7 @@ loong RepoSize;
 
 #pragma region Functions
 	template <class T> T RequestValueFromUser(string, string);
+	template <class T> T RequestValueFromUser(string, string, T, T);
 #pragma endregion
 
 #pragma region RepoControl
@@ -120,7 +121,23 @@ template <class T> T RequestValueFromUser(string message, string errorMessage) {
 		cout << message << endl;
 		cin >> value;
 		if (cin.fail()) {
-			cout << errorMessage << endl;
+			cout << errorMessage<< endl;
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+		break;
+	}
+	return value;
+}
+
+template <class T> T RequestValueFromUser(string message, string errorMessage, T min, T max) {
+	T value;
+	while (true) {
+		cout << message << endl;
+		cin >> value;
+		if (cin.fail() || value<min || value>max) {
+			cout << errorMessage << " in range : " << min << " to " << max << endl;
 			cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			continue;
@@ -220,6 +237,10 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 
 void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1 - name, 2 - price
 	system("cls");
+	if (repository == NULL) {
+		cout << "Unable to sort empty database...eediot" << endl;
+		return;
+	}
 	Product* table = new Product[RepoSize];
 	ProductRepositoryNode* tmp = repository;
 	ProductRepositoryNode* tmp2 = repository;
@@ -341,11 +362,7 @@ int Menu() {
 	cout << "6. Sort database" << endl;
 	cout << "\n" << endl;
 	cout << "7. Exit" << endl;
-	cout << "\nSelect option : ";
-	int option;
-	cin >> option;
-	if (option < 1 || option >7) return Menu();
-	return option;
+	return RequestValueFromUser("\nSelect option : ", "Wrong option! Select value ", 1, 7);
 }
 
 int FindMenu() {
@@ -353,11 +370,7 @@ int FindMenu() {
 	cout << "1. Find by ID" << endl;
 	cout << "2. Find by price" << endl;
 	cout << "3. Find by name" << endl;
-
-	int option;
-	cout << "Option : ";
-	cin >> option;
-	return option;
+	return RequestValueFromUser<int>("Option : ", "Enter numeric value ", 1, 3);
 }
 
 int SortMenu() {
@@ -366,8 +379,5 @@ int SortMenu() {
 	cout << "2. Sort by price" << endl;
 	cout << "3. Sort by name" << endl;
 
-	int option;
-	cout << "Option : ";
-	cin >> option;
-	return option;
+	return RequestValueFromUser<int>("Option : ", "Enter numeric value ", 1, 3);
 }
