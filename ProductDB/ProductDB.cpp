@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <string>
 #include <conio.h>
+#include <limits>
 #define EPSILON 0.001
 
 using namespace std;
@@ -23,6 +24,10 @@ loong RepoSize;
 		Product product;
 		ProductRepositoryNode* nextElement;
 	};
+#pragma endregion
+
+#pragma region Functions
+	template <class T> T RequestValueFromUser(string, string);
 #pragma endregion
 
 #pragma region RepoControl
@@ -107,6 +112,22 @@ int main()
 		option = Menu();
 	}
 	return 0;
+}
+
+template <class T> T RequestValueFromUser(string message, string errorMessage) {
+	T value;
+	while (true) {
+		cout << message << endl;
+		cin >> value;
+		if (cin.fail()) {
+			cout << errorMessage << endl;
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+		break;
+	}
+	return value;
 }
 
 void AddToRepository(ProductRepositoryNode* &repository, Product product) {
@@ -261,8 +282,7 @@ Product CreateNewProduct() {
 	cout << "Enter product information : " << endl;
 	cout << "> Product name : " << endl;
 	cin >> p.name;
-	cout << "> Product price : " << endl;
-	cin >> p.price;
+	p.price = RequestValueFromUser<float>("> Product price : ", "Enter numeric value!");
 	cout << "Assigned ID : " << CurrentId << endl;
 	p.id = CurrentId;
 	CurrentId++;
