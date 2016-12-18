@@ -1,6 +1,3 @@
-// ProductDB.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
 #include <iostream>
 #include <cstdlib>
@@ -10,12 +7,14 @@
 
 using namespace std;
 
-unsigned long long CurrentId; // Id for new products
-unsigned long long RepoSize;
+typedef unsigned long long loong;
+
+loong CurrentId; // Id for new products
+loong RepoSize;
 
 #pragma region Structures
 	struct Product {
-		unsigned long long id;
+		loong id;
 		string name;
 		float price;
 	};
@@ -52,6 +51,8 @@ int main()
 {
 	//init
 	ProductRepositoryNode* repo = NULL;
+	RepoSize = 0;
+	// TODO: load repository from file
 	int option = Menu();
 	while (option != 7) {
 		switch (option) {
@@ -197,6 +198,7 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 #pragma endregion
 
 void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1 - name, 2 - price
+	system("cls");
 	Product* table = new Product[RepoSize];
 	ProductRepositoryNode* tmp = repository;
 	ProductRepositoryNode* tmp2 = repository;
@@ -211,8 +213,8 @@ void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1
 	switch (mode) {
 	case 1: {
 			bool p = true;
-			for (int i = RepoSize - 1; i > 0; i--) {
-				for (int j = 0; j < i; j++) {
+			for (loong i = RepoSize - 1; i > 0; i--) {
+				for (loong j = 0; j < i; j++) {
 					if (table[j].id > table[j + 1].id) swap(table[j], table[j + 1]);
 					p = false;
 				}
@@ -223,8 +225,8 @@ void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1
 
 	case 2: {
 			bool p = true;
-			for (int i = RepoSize - 1; i > 0; i--) {
-				for (int j = 0; j < i; j++) {
+			for (loong i = RepoSize - 1; i > 0; i--) {
+				for (loong j = 0; j < i; j++) {
 					if (table[j].name > table[j + 1].name) swap(table[j], table[j + 1]);
 					p = false;
 				}
@@ -235,8 +237,8 @@ void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1
 
 	case 3: {
 			bool p = true;
-			for (int i = RepoSize - 1; i > 0; i--) {
-				for (int j = 0; j < i; j++) {
+			for (loong i = RepoSize - 1; i > 0; i--) {
+				for (loong j = 0; j < i; j++) {
 					if (table[j].price > table[j + 1].price) swap(table[j], table[j + 1]);
 					p = false;
 				}
@@ -246,9 +248,10 @@ void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1
 		break;
 	}
 	repository = NULL;
-	int temp = RepoSize;
+	loong temp = RepoSize;
 	RepoSize = 0;
 	for (int i = 0; i < temp; i++) AddToRepository(repository, table[i]);
+	cout << "Done!";
 	return;
 }
 
@@ -281,6 +284,7 @@ void EditProduct(ProductRepositoryNode* repository, int id) {
 
 void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 	ProductRepositoryNode* tmp = repository;
+	if (repository == NULL) return;
 	if (repository->product.id == id) {
 		tmp = NULL;
 		if (repository->nextElement != NULL) {
@@ -291,7 +295,6 @@ void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 		RepoSize--;
 		return;
 	}
-	if (repository == NULL) return;
 	if (repository != NULL) {
 		while (tmp->nextElement->product.id != id) {
 			if (tmp->nextElement == NULL) return;
@@ -307,6 +310,7 @@ void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 int Menu() {
 	system("cls");
 	cout << "------------------- Main menu -----" << endl;
+	cout << "\n\n"<<RepoSize<<" items in database\n\n" << endl;
 	cout << "====== View =======================" << endl;
 	cout << "1. Display all products in database" << endl;
 	cout << "2. Find product in database" << endl;
