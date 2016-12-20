@@ -31,7 +31,7 @@ loong RepoSize;
 	template <class T> T RequestValueFromUser(string, string);
 	template <class T> T RequestValueFromUser(string, string, T, T);
 	void SaveToFile(ProductRepositoryNode* &r);
-	void LoadFromFile(ProductRepositoryNode* &r);
+	bool LoadFromFile(ProductRepositoryNode* &r);
 #pragma endregion
 
 #pragma region RepoControl
@@ -61,63 +61,70 @@ int main()
 	//init
 	ProductRepositoryNode* repo = NULL;
 	RepoSize = 0;
-	// TODO: load repository from file
+	if (!LoadFromFile(repo)) std::cout << "Unable to load database file. Creating new" << endl;
 	int option = Menu();
 	while (option != 8) {
 		switch (option) {
-			case 1:
-				DisplayRepository(repo);
-				break;
-			case 2: {
-				int optionFind = FindMenu();
-				switch (optionFind) {
-					case 1:
-						int ID;
-						cout << "ID : ";
-						cin >> ID;
-						FindProduct(repo, ID);
-						break;
-					case 2:
-						double price;
-						cout << "Price : ";
-						cin >> price;
-						FindProduct(repo, price);
-						break;
-					case 3:
-						string name;
-						cout << "Name : ";
-						cin >> name;
-						FindProduct(repo, name);
-						break;
-				}
-			}
+		case 1:
+			DisplayRepository(repo);
 			break;
+		case 2: {
+			int optionFind = FindMenu();
+			switch (optionFind) {
+			case 1:
+				int ID;
+				std::cout << "ID : ";
+				std::cin >> ID;
+				FindProduct(repo, ID);
+				break;
+			case 2:
+				double price;
+				std::cout << "Price : ";
+				std::cin >> price;
+				FindProduct(repo, price);
+				break;
 			case 3:
-				AddToRepository(repo, CreateNewProduct());
+				string name;
+				std::cout << "Name : ";
+				std::cin >> name;
+				FindProduct(repo, name);
 				break;
-			case 4: {
-				int ID;
-				cout << "Enter product's ID : ";
-				cin >> ID;
-				EditProduct(repo, ID); }
+			}
+		}
 				break;
-			case 5:
-				int ID;
-				cout << "Enter product's ID : ";
-				cin >> ID;
-				DeleteProduct(repo, ID);
+		case 3:
+			AddToRepository(repo, CreateNewProduct());
+			break;
+		case 4: {
+			int editId;
+			std::cout << "Enter product's ID : ";
+			std::cin >> editId;
+			EditProduct(repo, editId);
+		}
 				break;
-			case 6: {
-				int optionSort = SortMenu();
-				SortRepository(repo, optionSort);
-				}
+		case 5: {
+			int ID;
+			std::cout << "Enter product's ID : ";
+			std::cin >> ID;
+			DeleteProduct(repo, ID);
+		}
 				break;
-			case 7:
-				SaveToFile(repo);
+		case 6: {
+			int optionSort = SortMenu();
+			SortRepository(repo, optionSort);
+		}
 				break;
+		case 7:
+			SaveToFile(repo);
+			break;
 		}
 		_getch();
 		option = Menu();
+	}
+	while (repo != NULL) {
+		ProductRepositoryNode* tmp = repo->nextElement;
+		delete repo;
+		repo = tmp;
 	}
 	return 0;
 }
@@ -125,12 +132,12 @@ int main()
 template <class T> T RequestValueFromUser(string message, string errorMessage) {
 	T value;
 	while (true) {
-		cout << message << endl;
-		cin >> value;
-		if (cin.fail()) {
-			cout << errorMessage<< endl;
-			cin.clear();
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << message << endl;
+		std::cin >> value;
+		if (std::cin.fail()) {
+			std::cout << errorMessage<< endl;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			continue;
 		}
 		break;
@@ -141,12 +148,12 @@ template <class T> T RequestValueFromUser(string message, string errorMessage) {
 template <class T> T RequestValueFromUser(string message, string errorMessage, T min, T max) {
 	T value;
 	while (true) {
-		cout << message << endl;
-		cin >> value;
-		if (cin.fail() || value<min || value>max) {
-			cout << errorMessage << " in range : " << min << " to " << max << endl;
-			cin.clear();
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << message << endl;
+		std::cin >> value;
+		if (std::cin.fail() || value<min || value>max) {
+			std::cout << errorMessage << " in range : " << min << " to " << max << endl;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			continue;
 		}
 		break;
@@ -162,26 +169,51 @@ void SaveToFile(ProductRepositoryNode* &repository) {
 	}
 	try {
 		ofstream output("ProductDB.dbf", ios::trunc);
-		output << CurrentId <<" "<< RepoSize << endl;
+		output << CurrentId << endl << RepoSize << endl;
 		ProductRepositoryNode* tmp = repository;
 		if (tmp != NULL) {
 			while (tmp != NULL) {
-				output << tmp->product.id << endl << tmp->product.name << endl << tmp->product.price << endl;
+				output << tmp->product.id <<" "<< tmp->product.name << " " << tmp->product.price << endl;
 				tmp = tmp->nextElement;
 			}
 		}
 		output.close();
 	}
 	catch (const char* msg) {
-		cout << msg << endl;
+		std::cout << msg << endl;
 		remove("ProductDB.dbf");
 		rename("ProductDB.transact.dbf", "ProductDB");
 	}
 	remove("ProductDB.transact.dbf");
 }
 
-void LoadFromFile(ProductRepositoryNode* &repository) {
+bool LoadFromFile(ProductRepositoryNode* &repository) {
+	ifstream f1("ProductDB.dbf");
+	if (!f1.good()) {
+		
+		CurrentId = 0;
+		RepoSize = 0;
+		return false;
+	}
+	else {
+		loong tmpSize = 0;
+		try {
+			f1 >> CurrentId;
+			f1 >> tmpSize; 
+			Product p;
 
+			while (f1 >> p.id >> p.name >> p.price) {
+				AddToRepository(repository, p);
+			}
+			f1.close();
+			RepoSize = tmpSize;
+			return true;
+		}
+		catch (const char* msg) {
+			std::cout << msg << endl;
+			return false;
+		}
+	}
 }
 
 void AddToRepository(ProductRepositoryNode* &repository, Product product) {
@@ -203,23 +235,23 @@ void DisplayRepository(ProductRepositoryNode* repository) {
 	ProductRepositoryNode* tmp = repository;
 	if (tmp != NULL) {
 		while (tmp != NULL) {
-			cout << ">> Element number " << i << endl;
+			std::cout << ">> Element number " << i << endl;
 			DisplayProductInfo(tmp->product);
 			i++;
 			tmp = tmp->nextElement;
 		}
 	}
 	else {
-		cout << "No products found in database\n\n" << endl;
+		std::cout << "No products found in database\n\n" << endl;
 	}
 }
 
 void DisplayProductInfo(Product product) {
-	//cout << "=========================================================" << endl;
-	cout << "> Product id : " << product.id << endl;
-	cout << "> Product name : " << product.name << endl;
-	cout << "> Product price : " << product.price << endl;
-	cout << "=========================================================" << endl;
+	//std::cout << "=========================================================" << endl;
+	std::cout << "> Product id : " << product.id << endl;
+	std::cout << "> Product name : " << product.name << endl;
+	std::cout << "> Product price : " << product.price << endl;
+	std::cout << "=========================================================" << endl;
 }
 
 #pragma region FindProductOverloads
@@ -235,7 +267,7 @@ void FindProduct(ProductRepositoryNode* repository, string name) {
 		}
 	}
 	else {
-		cout << "No products found in database" << endl;
+		std::cout << "No products found in database" << endl;
 	}
 }
 
@@ -251,7 +283,7 @@ void FindProduct(ProductRepositoryNode* repository, int id) {
 		}
 	}
 	else {
-		cout << "No products found in database" << endl;
+		std::cout << "No products found in database" << endl;
 	}
 }
 
@@ -266,7 +298,7 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 		}
 	}
 	else {
-		cout << "No products found in database" << endl;
+		std::cout << "No products found in database" << endl;
 	}
 }
 
@@ -275,7 +307,7 @@ void FindProduct(ProductRepositoryNode* repository, double price) {
 void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1 - name, 2 - price
 	system("cls");
 	if (repository == NULL) {
-		cout << "Unable to sort empty database...eediot" << endl;
+		std::cout << "Unable to sort empty database" << endl;
 		return;
 	}
 	Product* table = new Product[RepoSize];
@@ -330,18 +362,18 @@ void SortRepository(ProductRepositoryNode* &repository, int mode) { // 0 - id, 1
 	loong temp = RepoSize;
 	RepoSize = 0;
 	for (int i = 0; i < temp; i++) AddToRepository(repository, table[i]);
-	cout << "Done!";
+	std::cout << "Done!";
 	return;
 }
 
 Product CreateNewProduct() {
 	Product p;
 	system("cls");
-	cout << "Enter product information : " << endl;
-	cout << "> Product name : " << endl;
-	cin >> p.name;
+	std::cout << "Enter product information : " << endl;
+	std::cout << "> Product name : " << endl;
+	std::cin >> p.name;
 	p.price = RequestValueFromUser<float>("> Product price : ", "Enter numeric value!");
-	cout << "Assigned ID : " << CurrentId << endl;
+	std::cout << "Assigned ID : " << CurrentId << endl;
 	p.id = CurrentId;
 	CurrentId++;
 	return p;
@@ -356,8 +388,9 @@ void EditProduct(ProductRepositoryNode* repository, int id) {
 			tmp->product.id = tmpID;
 			return;
 		}
+		tmp = tmp->nextElement;
 	}
-	cout << "Selected product does not exist" << endl;
+	std::cout << "Selected product does not exist" << endl;
 }
 
 void DeleteProduct(ProductRepositoryNode* &repository, int id) {
@@ -387,35 +420,35 @@ void DeleteProduct(ProductRepositoryNode* &repository, int id) {
 
 int Menu() {
 	system("cls");
-	cout << "------------------- Main menu -----" << endl;
-	cout << "\n\n"<<RepoSize<<" items in database\n\n" << endl;
-	cout << "====== View =======================" << endl;
-	cout << "1. Display all products in database" << endl;
-	cout << "2. Find product in database" << endl;
-	cout << "====== Manage =====================" << endl;
-	cout << "3. Add new product to database" << endl;
-	cout << "4. Edit existing product" << endl;
-	cout << "5. Delete product from database" << endl;
-	cout << "6. Sort database" << endl;
-	cout << "7. Save changes" << endl;
-	cout << "\n" << endl;
-	cout << "8. Exit" << endl;
+	std::cout << "------------------- Main menu -----" << endl;
+	std::cout << "\n\n"<<RepoSize<<" items in database\n\n" << endl;
+	std::cout << "====== View =======================" << endl;
+	std::cout << "1. Display all products in database" << endl;
+	std::cout << "2. Find product in database" << endl;
+	std::cout << "====== Manage =====================" << endl;
+	std::cout << "3. Add new product to database" << endl;
+	std::cout << "4. Edit existing product" << endl;
+	std::cout << "5. Delete product from database" << endl;
+	std::cout << "6. Sort database" << endl;
+	std::cout << "7. Save changes" << endl;
+	std::cout << "\n" << endl;
+	std::cout << "8. Exit" << endl;
 	return RequestValueFromUser("\nSelect option : ", "Wrong option! Select value ", 1, 8);
 }
 
 int FindMenu() {
 	system(" cls");
-	cout << "1. Find by ID" << endl;
-	cout << "2. Find by price" << endl;
-	cout << "3. Find by name" << endl;
+	std::cout << "1. Find by ID" << endl;
+	std::cout << "2. Find by price" << endl;
+	std::cout << "3. Find by name" << endl;
 	return RequestValueFromUser<int>("Option : ", "Enter numeric value ", 1, 3);
 }
 
 int SortMenu() {
 	system(" cls");
-	cout << "1. Sort by ID" << endl;
-	cout << "2. Sort by price" << endl;
-	cout << "3. Sort by name" << endl;
+	std::cout << "1. Sort by ID" << endl;
+	std::cout << "2. Sort by name" << endl;
+	std::cout << "3. Sort by price" << endl;
 
 	return RequestValueFromUser<int>("Option : ", "Enter numeric value ", 1, 3);
 }
